@@ -6,4 +6,3 @@ PyPDF2
 python-docx
 openai
 edge-tts
-playsound
