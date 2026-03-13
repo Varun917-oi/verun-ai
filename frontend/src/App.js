@@ -69,37 +69,61 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+ const sendMessage = async () => {
+  if (!input.trim()) return;
 
-    const userMessage = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = input;
-    setInput("");
+  const userMessage = { role: "user", text: input };
+  setMessages((prev) => [...prev, userMessage]);
 
-    try {
-      const res = await fetch("https://verun-ai-backend.onrender.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentInput })
-      });
+  const currentInput = input;
+  setInput("");
 
-      const data = await res.json();
-      const aiMessage = { role: "assistant", text: data.response };
-      setMessages((prev) => [...prev, aiMessage]);
+  try {
+    const res = await fetch("https://verun-ai-backend.onrender.com/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: currentInput })
+    });
 
-      if (data.voice) {
-        const audio = new Audio(data.voice + "?t=" + Date.now());
-        audio.play().catch(e => console.log("Audio playback requires user interaction."));
-      }
+    console.log("Response status:", res.status);
 
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: "Backend connection error. Please ensure your Flask server is running." }
-      ]);
+    if (!res.ok) {
+      throw new Error("Server returned error");
     }
-  };
+
+    const data = await res.json();
+    console.log("AI Response:", data);
+
+    const aiMessage = {
+      role: "assistant",
+      text: data.response || "No response from AI"
+    };
+
+    setMessages((prev) => [...prev, aiMessage]);
+
+    // play audio if backend sends it
+    if (data.voice) {
+      const audio = new Audio(data.voice + "?t=" + Date.now());
+      audio.play().catch(() => {
+        console.log("Audio autoplay blocked by browser");
+      });
+    }
+
+  } catch (error) {
+    console.error("Fetch error:", error);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        text:
+          "⚠️ Backend connection issue. The server may be waking up (Render cold start). Please try again in a few seconds."
+      }
+    ]);
+  }
+};
 
   const startListening = () => {
   const SpeechRecognition =
