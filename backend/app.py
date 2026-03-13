@@ -108,7 +108,8 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_input = request.json["message"]
+    data = request.get_json()
+user_input = data.get("message", "")
     lower_input = user_input.lower().strip()
 
     # MATH
