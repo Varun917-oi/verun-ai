@@ -9,7 +9,11 @@ import tempfile
 import os
 import threading
 import re
-from playsound import playsound
+from dotenv import load_dotenv
+
+# ===================== LOAD ENV =====================
+
+load_dotenv()
 
 # ===================== CREATE APP =====================
 
@@ -18,9 +22,9 @@ CORS(app)
 
 # ===================== CONFIG =====================
 
-OPENROUTER_API_KEY = "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"
-WEATHER_API_KEY = "da3e71068f4f9798679f383c26b66567"
-CITY = "Farrukhabad"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+CITY = os.getenv("CITY", "Farrukhabad")
 
 client = OpenAI(
     api_key=OPENROUTER_API_KEY,
@@ -53,8 +57,11 @@ async def edge_speak(text):
 
     await communicate.save(temp_path)
 
+    # playsound removed (servers cannot play audio)
+    # file will simply be generated and removed
+
     try:
-        playsound(temp_path)
+        pass
     finally:
         os.remove(temp_path)
 
@@ -160,4 +167,5 @@ def chat():
 # ===================== RUN =====================
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
